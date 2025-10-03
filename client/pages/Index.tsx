@@ -52,64 +52,16 @@ export default function Index() {
     return () => clearInterval(id);
   }, [sending]);
 
-  function loadWhatsConfig() {
-    try {
-      const raw = localStorage.getItem("whatsappConfig");
-      if (!raw) return null;
-      const p = JSON.parse(raw);
-      if (!p.appkey || !p.authkey || !p.endpoint) return null;
-      return p as {
-        appkey: string;
-        authkey: string;
-        endpoint: string;
-        templateId?: string;
-      };
-    } catch {
-      return null;
-    }
-  }
-
   async function capturePngDataUrl() {
     if (!captureRef.current) return null as string | null;
     const node = captureRef.current;
-    const dataUrl = await toPng(node, {
-      cacheBust: true,
-      pixelRatio: Math.min(window.devicePixelRatio || 2, 3),
-      backgroundColor: getComputedStyle(
-        document.documentElement,
-      ).getPropertyValue("--background")
-        ? undefined
-        : "white",
-    });
-    return dataUrl;
-  }
-
-  function dataUrlToBlob(dataUrl: string) {
-    const parts = dataUrl.split(",");
-    const meta = parts[0];
-    const base64 = parts[1] || "";
-    const mimeMatch = meta.match(/data:([^;]+);base64/);
-    const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
-    const byteChars = atob(base64);
-    const byteNumbers = new Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-      byteNumbers[i] = byteChars.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mime });
-  }
-
-  function formatTo(raw?: string | null) {
-    const digits = String(raw || "").replace(/\D+/g, "");
-    if (!digits) return "";
-    const last10 = digits.slice(-10);
-    return `91${last10}`;
+    return captureNodeToPng(node);
   }
 
   async function handleSendWhatsApp() {
     setSending(true);
     try {
-      const cfg = loadWhatsConfig();
+      const cfg = getWhatsAppCredentials();
       if (!cfg) {
         toast.error("Set WhatsApp keys first in Settings (WhatsApp) page");
         return;
@@ -119,7 +71,7 @@ export default function Index() {
         toast.error("No mobile number (BB) available");
         return;
       }
-      const to = formatTo(rawPhone);
+      const to = normalizeWhatsAppRecipient(rawPhone);
       const dataUrl = await capturePngDataUrl();
       if (!dataUrl) return;
       const meta = parseMonthYear(
