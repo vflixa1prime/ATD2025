@@ -8,15 +8,31 @@ import {
   Employee,
 } from "@shared/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import AttendanceSnapshot from "@/components/attendance/AttendanceSnapshot";
 import { captureNodeToPng } from "@/lib/capture";
 import { isExcludedName, parseMonthYear } from "@/lib/attendance";
-import { getWhatsAppCredentials, normalizeWhatsAppRecipient } from "@/lib/whatsapp-config";
+import {
+  getWhatsAppCredentials,
+  normalizeWhatsAppRecipient,
+} from "@/lib/whatsapp-config";
 import { toast } from "sonner";
 
 export default function SendMultiPage() {
@@ -43,7 +59,9 @@ export default function SendMultiPage() {
     queryKey: ["employees", file],
     enabled: !!file,
     queryFn: async (): Promise<EmployeesResponse> => {
-      const res = await fetch(`/api/attendance/employees?file=${encodeURIComponent(file!)}`);
+      const res = await fetch(
+        `/api/attendance/employees?file=${encodeURIComponent(file!)}`,
+      );
       if (!res.ok) throw new Error("Failed to fetch employees");
       return res.json();
     },
@@ -66,7 +84,10 @@ export default function SendMultiPage() {
     if (!search) return mapped;
     const q = search.toLowerCase();
     return mapped.filter(
-      (e) => e.numeric.includes(q) || e.number.toLowerCase().includes(q) || e.name.toLowerCase().includes(q),
+      (e) =>
+        e.numeric.includes(q) ||
+        e.number.toLowerCase().includes(q) ||
+        e.name.toLowerCase().includes(q),
     );
   }, [employeesQuery.data, search]) as (Employee & { numeric: string })[];
 
@@ -76,19 +97,26 @@ export default function SendMultiPage() {
     return ids.every((id) => !!selected[id]);
   }, [employees, selected]);
 
-  const toggleAll = useCallback((checked: boolean) => {
-    const next: Record<string, boolean> = { ...selected };
-    for (const e of employees) next[(e as any).numeric || e.number] = checked;
-    setSelected(next);
-  }, [employees, selected]);
+  const toggleAll = useCallback(
+    (checked: boolean) => {
+      const next: Record<string, boolean> = { ...selected };
+      for (const e of employees) next[(e as any).numeric || e.number] = checked;
+      setSelected(next);
+    },
+    [employees, selected],
+  );
 
   const [status, setStatus] = useState<Record<string, string>>({}); // number -> status
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
   const captureRef = useRef<HTMLDivElement | null>(null);
-  const [snapSummary, setSnapSummary] = useState<AttendanceResponse | null>(null);
-  const [snapDaily, setSnapDaily] = useState<DailyAttendanceResponse | null>(null);
+  const [snapSummary, setSnapSummary] = useState<AttendanceResponse | null>(
+    null,
+  );
+  const [snapDaily, setSnapDaily] = useState<DailyAttendanceResponse | null>(
+    null,
+  );
 
   async function loadEmployeeData(num: string, name: string) {
     const params = new URLSearchParams({ file: file! });
@@ -104,7 +132,10 @@ export default function SendMultiPage() {
     return { summary, daily };
   }
 
-  async function renderSnapshotPng(summary: AttendanceResponse, daily: DailyAttendanceResponse) {
+  async function renderSnapshotPng(
+    summary: AttendanceResponse,
+    daily: DailyAttendanceResponse,
+  ) {
     setSnapSummary(summary);
     setSnapDaily(daily);
     await new Promise((r) => requestAnimationFrame(() => r(null)));
@@ -113,7 +144,10 @@ export default function SendMultiPage() {
     return await captureNodeToPng(captureRef.current);
   }
 
-  async function sendOne(summary: AttendanceResponse, daily: DailyAttendanceResponse) {
+  async function sendOne(
+    summary: AttendanceResponse,
+    daily: DailyAttendanceResponse,
+  ) {
     const cfg = getWhatsAppCredentials();
     if (!cfg) throw new Error("Missing WhatsApp credentials");
     const rawPhone = summary?.details?.mobile1;
@@ -130,10 +164,15 @@ export default function SendMultiPage() {
     const uploadResp = await fetch("/api/whatsapp/image-url", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ imageDataUrl: dataUrl, name: `${message}.png`, publicBase: cfg.imageHost || undefined }),
+      body: JSON.stringify({
+        imageDataUrl: dataUrl,
+        name: `${message}.png`,
+        publicBase: cfg.imageHost || undefined,
+      }),
     });
     const uploadJson = await uploadResp.json();
-    if (!uploadResp.ok || !uploadJson?.url) throw new Error("Failed to prepare image URL");
+    if (!uploadResp.ok || !uploadJson?.url)
+      throw new Error("Failed to prepare image URL");
     let fileUrl: string = uploadJson.url;
     if (cfg.imageHost) {
       try {
@@ -143,7 +182,14 @@ export default function SendMultiPage() {
       } catch {}
     }
 
-    const payload: any = { endpoint: cfg.endpoint, appkey: cfg.appkey, authkey: cfg.authkey, to, message, fileUrl };
+    const payload: any = {
+      endpoint: cfg.endpoint,
+      appkey: cfg.appkey,
+      authkey: cfg.authkey,
+      to,
+      message,
+      fileUrl,
+    };
     if (cfg.templateId) payload.template_id = cfg.templateId;
 
     const resp = await fetch("/api/whatsapp/send", {
@@ -161,7 +207,9 @@ export default function SendMultiPage() {
       toast.error("Set WhatsApp keys first in Settings (WhatsApp) page");
       return;
     }
-    const targets = employees.filter((e) => selected[(e as any).numeric || e.number]);
+    const targets = employees.filter(
+      (e) => selected[(e as any).numeric || e.number],
+    );
     if (!targets.length) {
       toast.message("Select at least one employee");
       return;
@@ -170,7 +218,8 @@ export default function SendMultiPage() {
     setProgress({ current: 0, total: targets.length });
 
     const nextStatus: Record<string, string> = { ...status };
-    for (const t of targets) nextStatus[(t as any).numeric || t.number] = "Queued";
+    for (const t of targets)
+      nextStatus[(t as any).numeric || t.number] = "Queued";
     setStatus(nextStatus);
 
     let i = 0;
@@ -196,28 +245,48 @@ export default function SendMultiPage() {
     <div className="container mx-auto py-10 space-y-6">
       <section className="space-y-2">
         <h1 className="text-3xl font-extrabold tracking-tight">Send Multi</h1>
-        <p className="text-muted-foreground">Select multiple employees and send attendance snapshot on WhatsApp.</p>
+        <p className="text-muted-foreground">
+          Select multiple employees and send attendance snapshot on WhatsApp.
+        </p>
       </section>
 
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Recipients</CardTitle>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => toggleAll(!allSelected)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => toggleAll(!allSelected)}
+            >
               {allSelected ? "Unselect All" : "Select All"}
             </Button>
-            <Button size="sm" onClick={handleSendSelected} disabled={sending || !employees.length}>
-              {sending ? `Sending ${progress.current}/${progress.total}` : "Send Selected"}
+            <Button
+              size="sm"
+              onClick={handleSendSelected}
+              disabled={sending || !employees.length}
+            >
+              {sending
+                ? `Sending ${progress.current}/${progress.total}`
+                : "Send Selected"}
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-2 block text-sm font-medium">Monthly file</label>
+              <label className="mb-2 block text-sm font-medium">
+                Monthly file
+              </label>
               <Select value={file} onValueChange={setFile}>
                 <SelectTrigger>
-                  <SelectValue placeholder={files.length ? "Select file" : "No files found. Upload in Upload & Files"} />
+                  <SelectValue
+                    placeholder={
+                      files.length
+                        ? "Select file"
+                        : "No files found. Upload in Upload & Files"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {files.map((f) => (
@@ -230,7 +299,11 @@ export default function SendMultiPage() {
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium">Search</label>
-              <Input placeholder="Type name or roll number..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input
+                placeholder="Type name or roll number..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium">Selected</label>
@@ -245,7 +318,11 @@ export default function SendMultiPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[52px] text-center">
-                    <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(Boolean(v))} aria-label="Select all" />
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={(v) => toggleAll(Boolean(v))}
+                      aria-label="Select all"
+                    />
                   </TableHead>
                   <TableHead>Roll</TableHead>
                   <TableHead>Name</TableHead>
@@ -260,18 +337,28 @@ export default function SendMultiPage() {
                       <TableCell className="text-center">
                         <Checkbox
                           checked={!!selected[num]}
-                          onCheckedChange={(v) => setSelected((s) => ({ ...s, [num]: Boolean(v) }))}
+                          onCheckedChange={(v) =>
+                            setSelected((s) => ({ ...s, [num]: Boolean(v) }))
+                          }
                           aria-label={`Select ${e.name}`}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{String(num)}</TableCell>
+                      <TableCell className="font-medium">
+                        {String(num)}
+                      </TableCell>
                       <TableCell>{e.name}</TableCell>
                       <TableCell>
-                        <span className={
-                          status[num] === "Sent" ? "text-emerald-600 font-medium" :
-                          status[num] === "Failed" ? "text-rose-600 font-medium" :
-                          status[num] ? "text-amber-600" : "text-muted-foreground"
-                        }>
+                        <span
+                          className={
+                            status[num] === "Sent"
+                              ? "text-emerald-600 font-medium"
+                              : status[num] === "Failed"
+                                ? "text-rose-600 font-medium"
+                                : status[num]
+                                  ? "text-amber-600"
+                                  : "text-muted-foreground"
+                          }
+                        >
                           {status[num] || "-"}
                         </span>
                       </TableCell>
@@ -284,24 +371,43 @@ export default function SendMultiPage() {
 
           {!files.length && (
             <div className="rounded-md border p-4 text-sm text-muted-foreground">
-              No files uploaded. Go to <a href="/files" className="underline">Upload & Files</a> to add a monthly Excel file.
+              No files uploaded. Go to{" "}
+              <a href="/files" className="underline">
+                Upload & Files
+              </a>{" "}
+              to add a monthly Excel file.
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Offscreen snapshot renderer for capture */}
-      <div style={{ position: "absolute", left: -99999, top: -99999, width: 1200 }}>
+      <div
+        style={{ position: "absolute", left: -99999, top: -99999, width: 1200 }}
+      >
         <div ref={captureRef}>
-          <AttendanceSnapshot layout={layout} summary={snapSummary || undefined} daily={snapDaily || undefined} fileLabel={fileLabel} />
+          <AttendanceSnapshot
+            layout={layout}
+            summary={snapSummary || undefined}
+            daily={snapDaily || undefined}
+            fileLabel={fileLabel}
+          />
         </div>
       </div>
 
       {sending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-[90%] max-w-sm rounded-lg border bg-card p-6 shadow-lg text-center" role="status" aria-live="polite">
-            <div className="mb-3 text-base font-semibold">Sending to WhatsApp...</div>
-            <div className="text-sm text-muted-foreground">Sending {progress.current}/{progress.total}</div>
+          <div
+            className="w-[90%] max-w-sm rounded-lg border bg-card p-6 shadow-lg text-center"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="mb-3 text-base font-semibold">
+              Sending to WhatsApp...
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Sending {progress.current}/{progress.total}
+            </div>
           </div>
         </div>
       )}
