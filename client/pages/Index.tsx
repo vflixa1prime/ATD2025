@@ -148,15 +148,7 @@ export default function Index() {
     if (!captureRef.current) return;
     try {
       const node = captureRef.current;
-      const dataUrl = await toPng(node, {
-        cacheBust: true,
-        pixelRatio: Math.min(window.devicePixelRatio || 2, 3),
-        backgroundColor: getComputedStyle(
-          document.documentElement,
-        ).getPropertyValue("--background")
-          ? undefined
-          : "white",
-      });
+      const dataUrl = await captureNodeToPng(node);
       const link = document.createElement("a");
       const emp = summaryQuery.data?.employee;
       const fileLabel =
