@@ -54,23 +54,31 @@ export default function SendMultiPage() {
     return f?.originalName || "";
   }, [files, file]);
 
-  const employees: Employee[] = useMemo(() => {
+  const employees = useMemo(() => {
     const list = employeesQuery.data?.employees ?? [];
     const filtered = list.filter((e) => !isExcludedName(e.name));
-    if (!search) return filtered;
+    const mapped = filtered
+      .map((e) => ({
+        ...e,
+        numeric: (e.number || "").replace(/\D+/g, ""),
+      }))
+      .filter((e) => !!e.numeric);
+    if (!search) return mapped;
     const q = search.toLowerCase();
-    return filtered.filter((e) => e.number.toLowerCase().includes(q) || e.name.toLowerCase().includes(q));
-  }, [employeesQuery.data, search]);
+    return mapped.filter(
+      (e) => e.numeric.includes(q) || e.number.toLowerCase().includes(q) || e.name.toLowerCase().includes(q),
+    );
+  }, [employeesQuery.data, search]) as (Employee & { numeric: string })[];
 
   const allSelected = useMemo(() => {
-    const ids = employees.map((e) => e.number);
+    const ids = employees.map((e) => (e as any).numeric || e.number);
     if (!ids.length) return false;
     return ids.every((id) => !!selected[id]);
   }, [employees, selected]);
 
   const toggleAll = useCallback((checked: boolean) => {
     const next: Record<string, boolean> = { ...selected };
-    for (const e of employees) next[e.number] = checked;
+    for (const e of employees) next[(e as any).numeric || e.number] = checked;
     setSelected(next);
   }, [employees, selected]);
 
@@ -153,7 +161,7 @@ export default function SendMultiPage() {
       toast.error("Set WhatsApp keys first in Settings (WhatsApp) page");
       return;
     }
-    const targets = employees.filter((e) => selected[e.number]);
+    const targets = employees.filter((e) => selected[(e as any).numeric || e.number]);
     if (!targets.length) {
       toast.message("Select at least one employee");
       return;
@@ -162,20 +170,21 @@ export default function SendMultiPage() {
     setProgress({ current: 0, total: targets.length });
 
     const nextStatus: Record<string, string> = { ...status };
-    for (const t of targets) nextStatus[t.number] = "Queued";
+    for (const t of targets) nextStatus[(t as any).numeric || t.number] = "Queued";
     setStatus(nextStatus);
 
     let i = 0;
     for (const emp of targets) {
+      const key = (emp as any).numeric || emp.number;
       i += 1;
       setProgress({ current: i, total: targets.length });
-      setStatus((s) => ({ ...s, [emp.number]: "Sending..." }));
+      setStatus((s) => ({ ...s, [key]: "Sending..." }));
       try {
         const data = await loadEmployeeData(emp.number, emp.name);
         await sendOne(data.summary, data.daily);
-        setStatus((s) => ({ ...s, [emp.number]: "Sent" }));
+        setStatus((s) => ({ ...s, [key]: "Sent" }));
       } catch (e: any) {
-        setStatus((s) => ({ ...s, [emp.number]: `Failed` }));
+        setStatus((s) => ({ ...s, [key]: `Failed` }));
       }
     }
 
@@ -244,28 +253,31 @@ export default function SendMultiPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {employees.map((e) => (
-                  <TableRow key={e.number + e.name}>
-                    <TableCell className="text-center">
-                      <Checkbox
-                        checked={!!selected[e.number]}
-                        onCheckedChange={(v) => setSelected((s) => ({ ...s, [e.number]: Boolean(v) }))}
-                        aria-label={`Select ${e.name}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{(e.number || "").replace(/\D+/g, "") || e.number}</TableCell>
-                    <TableCell>{e.name}</TableCell>
-                    <TableCell>
-                      <span className={
-                        status[e.number] === "Sent" ? "text-emerald-600 font-medium" :
-                        status[e.number] === "Failed" ? "text-rose-600 font-medium" :
-                        status[e.number] ? "text-amber-600" : "text-muted-foreground"
-                      }>
-                        {status[e.number] || "-"}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {employees.map((e) => {
+                  const num = (e as any).numeric || e.number;
+                  return (
+                    <TableRow key={String(num) + e.name}>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={!!selected[num]}
+                          onCheckedChange={(v) => setSelected((s) => ({ ...s, [num]: Boolean(v) }))}
+                          aria-label={`Select ${e.name}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{String(num)}</TableCell>
+                      <TableCell>{e.name}</TableCell>
+                      <TableCell>
+                        <span className={
+                          status[num] === "Sent" ? "text-emerald-600 font-medium" :
+                          status[num] === "Failed" ? "text-rose-600 font-medium" :
+                          status[num] ? "text-amber-600" : "text-muted-foreground"
+                        }>
+                          {status[num] || "-"}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
