@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import FilesPage from "./pages/Files";
 import WhatsAppSettings from "./pages/WhatsApp";
+import SendMultiPage from "./pages/SendMulti";
 import Layout from "@/components/Layout";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/files" element={<FilesPage />} />
             <Route path="/whatsapp" element={<WhatsAppSettings />} />
+            <Route path="/send-multi" element={<SendMultiPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
