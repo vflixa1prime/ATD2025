@@ -28,7 +28,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { captureNodeToPng } from "@/lib/capture";
-import { isExcludedName, parseMonthYear } from "@/lib/attendance";
+import { parseMonthYear } from "@/lib/attendance";
 import {
   getWhatsAppCredentials,
   normalizeWhatsAppRecipient,
