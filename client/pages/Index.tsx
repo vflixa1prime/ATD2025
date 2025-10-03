@@ -66,12 +66,20 @@ export default function Index() {
         toast.error("Set WhatsApp keys first in Settings (WhatsApp) page");
         return;
       }
+      if (!cfg) {
+        toast.error("Set WhatsApp keys first in Settings (WhatsApp) page");
+        return;
+      }
       const rawPhone = summaryQuery.data?.details?.mobile1;
       if (!rawPhone) {
         toast.error("No mobile number (BB) available");
         return;
       }
       const to = normalizeWhatsAppRecipient(rawPhone);
+      if (!to) {
+        toast.error("Invalid mobile number");
+        return;
+      }
       const dataUrl = await capturePngDataUrl();
       if (!dataUrl) return;
       const meta = parseMonthYear(
