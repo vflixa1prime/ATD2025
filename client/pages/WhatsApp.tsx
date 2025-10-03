@@ -10,7 +10,9 @@ import {
 } from "@/lib/whatsapp-config";
 
 export default function WhatsAppSettings() {
-  const [config, setConfig] = useState<WhatsAppConfig>(() => readWhatsAppConfig());
+  const [config, setConfig] = useState<WhatsAppConfig>(() =>
+    readWhatsAppConfig(),
+  );
 
   useEffect(() => {
     const id = setTimeout(() => {

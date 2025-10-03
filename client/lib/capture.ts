@@ -4,9 +4,9 @@ export async function captureNodeToPng(node: HTMLElement) {
   return toPng(node, {
     cacheBust: true,
     pixelRatio: Math.min(window.devicePixelRatio || 2, 3),
-    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue(
-      "--background",
-    )
+    backgroundColor: getComputedStyle(
+      document.documentElement,
+    ).getPropertyValue("--background")
       ? undefined
       : "white",
   });

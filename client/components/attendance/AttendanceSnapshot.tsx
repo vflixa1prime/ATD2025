@@ -1,8 +1,5 @@
 import { forwardRef } from "react";
-import type {
-  AttendanceResponse,
-  DailyAttendanceResponse,
-} from "@shared/api";
+import type { AttendanceResponse, DailyAttendanceResponse } from "@shared/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   buildCalendarCells,
@@ -145,7 +142,10 @@ const AttendanceSnapshot = forwardRef<HTMLDivElement, AttendanceSnapshotProps>(
                       rows.push(cells.slice(i, i + 7));
                     }
                     return rows.map((row, rowIndex) => (
-                      <div key={rowIndex} className="grid grid-cols-7 gap-2 mb-2">
+                      <div
+                        key={rowIndex}
+                        className="grid grid-cols-7 gap-2 mb-2"
+                      >
                         {row.map((cell, cellIndex) => (
                           <div
                             key={cellIndex}
@@ -157,7 +157,9 @@ const AttendanceSnapshot = forwardRef<HTMLDivElement, AttendanceSnapshotProps>(
                                   {cell.day}
                                 </div>
                                 <div
-                                  className={"text-sm font-bold " + codeColor(cell.code)}
+                                  className={
+                                    "text-sm font-bold " + codeColor(cell.code)
+                                  }
                                 >
                                   {cell.code === "WO" ? "W" : cell.code || ""}
                                 </div>
@@ -192,15 +194,22 @@ const AttendanceSnapshot = forwardRef<HTMLDivElement, AttendanceSnapshotProps>(
                               {meta &&
                               typeof meta.year === "number" &&
                               typeof meta.monthIndex === "number"
-                                ? new Date(meta.year, meta.monthIndex, day.day).toLocaleDateString(
-                                    undefined,
-                                    { weekday: "long" },
-                                  )
+                                ? new Date(
+                                    meta.year,
+                                    meta.monthIndex,
+                                    day.day,
+                                  ).toLocaleDateString(undefined, {
+                                    weekday: "long",
+                                  })
                                 : `Day ${day.day}`}
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className={"text-base font-bold " + codeColor(day.code)}>
+                            <div
+                              className={
+                                "text-base font-bold " + codeColor(day.code)
+                              }
+                            >
                               {day.code === "WO" ? "W" : day.code || ""}
                             </div>
                             <div className="text-xs font-bold">

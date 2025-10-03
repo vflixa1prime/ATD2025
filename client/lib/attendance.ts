@@ -26,7 +26,8 @@ export function isExcludedName(name: string) {
 }
 
 export function parseMonthYear(name?: string | null) {
-  if (!name) return null as null | { year: number; monthIndex: number; label: string };
+  if (!name)
+    return null as null | { year: number; monthIndex: number; label: string };
   const base = name.replace(/\.[^.]+$/, "");
   const regex = new RegExp(`(${MONTHS.join("|")})[^0-9]*([12][0-9]{3})`, "i");
   const match = base.match(regex);
