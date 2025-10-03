@@ -7,10 +7,10 @@ import {
   DailyAttendanceResponse,
 } from "@shared/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AttendanceSnapshot from "@/components/attendance/AttendanceSnapshot";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toPng } from "html-to-image";
 import { toast } from "sonner";
 import {
   Select,
@@ -27,6 +27,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { captureNodeToPng } from "@/lib/capture";
+import { isExcludedName, parseMonthYear } from "@/lib/attendance";
+import {
+  getWhatsAppCredentials,
+  normalizeWhatsAppRecipient,
+} from "@/lib/whatsapp-config";
 
 export default function Index() {
   const captureRef = useRef<HTMLDivElement | null>(null);
