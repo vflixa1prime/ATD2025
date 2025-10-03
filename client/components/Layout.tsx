@@ -24,6 +24,12 @@ export default function Layout({ children }: PropsWithChildren) {
               Upload & Files
             </NavItem>
             <NavItem
+              to="/send-multi"
+              current={location.pathname.startsWith("/send-multi")}
+            >
+              Send Multi
+            </NavItem>
+            <NavItem
               to="/whatsapp"
               current={location.pathname.startsWith("/whatsapp")}
             >
