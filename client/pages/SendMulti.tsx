@@ -253,7 +253,7 @@ export default function SendMultiPage() {
                         aria-label={`Select ${e.name}`}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{e.number}</TableCell>
+                    <TableCell className="font-medium">{(e.number || "").replace(/\D+/g, "") || e.number}</TableCell>
                     <TableCell>{e.name}</TableCell>
                     <TableCell>
                       <span className={
